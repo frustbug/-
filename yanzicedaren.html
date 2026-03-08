@@ -1,81 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>好感度管理</title>
+
+<style>
+
+body{
+font-family:'PingFang SC','Microsoft YaHei',sans-serif;
+background:linear-gradient(135deg,#fce4ec 0%,#ffe0e0 100%);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.container{
+background:rgba(255,255,255,0.9);
+padding:40px;
+border-radius:30px;
+box-shadow:0 15px 35px rgba(255,105,135,0.2);
+text-align:center;
+width:340px;
+border:2px solid white;
+}
+
+.score{
+font-size:2rem;
+color:#ff4d6d;
+margin:10px;
+}
+
+button{
+padding:10px 18px;
+background:#ff4d6d;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+margin:6px;
+}
+
+.alert{
+color:red;
+margin-top:10px;
+display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>好感度管理</h1>
+
+<div class="score" id="scoreDisplay">0</div>
+
+<input type="number" id="value">
+
+<br>
+
+<button onclick="setValue()">直接设置</button>
+<button onclick="add100()">+100</button>
+<button onclick="minus100()">-100</button>
+<button onclick="meet()">见面 +10000</button>
+
+<div class="alert" id="alert">
+⚠️ 小诺诺请求增加好感度！
+</div>
+
+</div>
+
 <script>
 
-const initial = 1000000
-
-let score = initial
+let score=0
 
 async function load(){
 
-const res = await fetch("score.json?t="+Date.now())
+const res = await fetch("score.json")
 const data = await res.json()
 
-score = data.score
+score=data.score
 
-updateDisplay()
+document.getElementById("scoreDisplay")
+.innerText=Math.floor(score)
 
 checkRequest()
 }
 
-function updateDisplay(){
-document.getElementById("scoreDisplay")
-.innerText = Math.floor(score).toLocaleString()
-}
-
-function limit(){
-if(score > initial) score = initial
-if(score < 0) score = 0
-}
-
 function save(){
 
-limit()
-
-alert("修改成功，请把新的 score.json 上传到 GitHub 才会同步")
-
-updateDisplay()
+alert("需要上传新的 score.json 到 GitHub 才会同步")
 
 }
 
 function setValue(){
-
-let v = parseFloat(document.getElementById("value").value)
-
-if(!isNaN(v)){
-score = v
+score=parseFloat(document.getElementById("value").value)
 save()
-}
-
 }
 
 function add100(){
-
-score += 100
+score+=100
 save()
-
 }
 
 function minus100(){
-
-score -= 100
+score-=100
 save()
-
 }
 
 function meet(){
-
-// 见面直接回满
-score = initial
-
+score+=10000
 save()
-
 }
 
 async function checkRequest(){
 
 try{
 
-const res = await fetch("request.json?t="+Date.now())
-const data = await res.json()
+const res=await fetch("request.json?t="+Date.now())
+const data=await res.json()
 
 if(data.request){
 document.getElementById("alert").style.display="block"
@@ -90,3 +141,6 @@ setInterval(load,3000)
 load()
 
 </script>
+
+</body>
+</html>
