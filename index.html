@@ -5,178 +5,173 @@
 <title>好感度</title>
 
 <style>
-
 body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#ffd6e7,#d9f0ff);
-font-family:sans-serif;
-
-/* 禁止复制 */
-user-select:none;
+    background:#111;
+    color:white;
+    text-align:center;
+    font-family:sans-serif;
+    user-select:none;
 }
 
-.box{
-text-align:center;
-background:white;
-padding:40px;
-border-radius:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
-position:relative;
+#love{
+    font-size:50px;
+    margin-top:80px;
 }
 
-.value{
-font-size:60px;
-color:#ff5b9f;
+#hammer{
+    font-size:120px;
+    cursor:pointer;
+    transition:transform 0.1s;
 }
 
-/* 锤子按钮 */
-
-.interact{
-margin-top:25px;
-font-size:45px;
-cursor:pointer;
+#hammer:active{
+    transform:scale(0.8) rotate(-20deg);
 }
 
-/* 冒出来的文字 */
-
-.message{
-position:absolute;
-left:50%;
-bottom:110px;
-transform:translateX(-50%);
-color:#ff5b9f;
-font-size:18px;
-
-background:white;
-padding:6px 14px;
-border-radius:10px;
-
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-
-opacity:0;
-pointer-events:none;
+.floating{
+    position:absolute;
+    color:#ff6;
+    font-size:24px;
+    animation:float 1s forwards;
 }
 
-/* 动画 */
-
-.message.show{
-animation:floatUp 1.5s ease;
+@keyframes float{
+    0%{
+        opacity:1;
+        transform:translateY(0);
+    }
+    100%{
+        opacity:0;
+        transform:translateY(-80px);
+    }
 }
-
-@keyframes floatUp{
-
-0%{
-opacity:0;
-transform:translate(-50%,20px);
-}
-
-20%{
-opacity:1;
-}
-
-100%{
-opacity:0;
-transform:translate(-50%,-40px);
-}
-
-}
-
 </style>
-
 </head>
+
 <body>
 
-<div class="box">
+<h1>好感度</h1>
 
-<h2>好感度</h2>
+<div id="love">0</div>
 
-<div class="value" id="favorability">0</div>
-
-<div class="message" id="msg">
-小诺诺小人想要加好感度
-</div>
-
-<div class="interact" id="interactBtn">🔨</div>
-
-</div>
+<div id="hammer">🔨</div>
 
 <script type="module">
 
-/* 禁止右键 */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-document.addEventListener("contextmenu",e=>{
-e.preventDefault()
-})
 
-/* Firebase */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+/* =====================
+   1️⃣ 把这里换成你的
+===================== */
 
 const firebaseConfig = {
-
-apiKey:"你的apiKey",
-
-authDomain:"你的项目.firebaseapp.com",
-
-databaseURL:"https://你的项目-default-rtdb.firebaseio.com/",
-
-projectId:"你的项目ID",
-
-storageBucket:"你的项目.appspot.com",
-
-messagingSenderId:"xxx",
-
-appId:"xxx"
-
+  apiKey: "AIzaSyBCUasPyQ0TMUylqju9JOWnkui1MCdHfMQ",
+  authDomain: "shiyan-ab7dd.firebaseapp.com",
+  databaseURL: "https://shiyan-ab7dd-default-rtdb.firebaseio.com",
+  projectId: "shiyan-ab7dd",
+  storageBucket: "shiyan-ab7dd.firebasestorage.app",
+  messagingSenderId: "1040979139264",
+  appId: "1:1040979139264:web:2fe257a380173083446b25"
 };
 
-const app = initializeApp(firebaseConfig);
 
+/* =====================
+   2️⃣ 初始化
+===================== */
+
+const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* 好感度 */
+const loveRef = ref(db,"love");
 
-const favorRef = ref(db,"favorability");
 
-onValue(favorRef,(snapshot)=>{
+/* =====================
+   3️⃣ 同步数据
+===================== */
 
-document.getElementById("favorability").innerText =
-snapshot.val();
+let love = 0;
+
+onValue(loveRef,(snap)=>{
+
+    if(snap.exists()){
+        love = snap.val();
+        document.getElementById("love").innerText = love;
+    }
 
 });
 
-/* 锤子互动 */
 
-const interactBtn =
-document.getElementById("interactBtn");
+/* =====================
+   4️⃣ 点击逻辑
+===================== */
 
-const msg =
-document.getElementById("msg");
+let localAdd = 0;
 
-interactBtn.onclick=function(){
+document.getElementById("hammer").onclick = function(e){
 
-msg.classList.remove("show")
+    localAdd++;
 
-void msg.offsetWidth
+    showText(e.pageX,e.pageY);
 
-msg.classList.add("show")
+};
 
-/* 向数据库发送请求 */
 
-push(ref(db,"requests"),{
+/* =====================
+   5️⃣ 每秒同步一次
+===================== */
 
-text:"小诺诺小人想要加好感度",
+setInterval(()=>{
 
-time:Date.now()
+    if(localAdd>0){
 
-})
+        love += localAdd;
+
+        set(loveRef,love);
+
+        localAdd = 0;
+
+    }
+
+},1000);
+
+
+
+/* =====================
+   6️⃣ 文字冒出来
+===================== */
+
+function showText(x,y){
+
+    let div = document.createElement("div");
+
+    div.className="floating";
+
+    div.innerText="+1";
+
+    div.style.left=x+"px";
+
+    div.style.top=y+"px";
+
+    document.body.appendChild(div);
+
+    setTimeout(()=>{
+
+        div.remove();
+
+    },1000);
 
 }
+
+
+/* =====================
+   7️⃣ 禁止复制
+===================== */
+
+document.addEventListener("contextmenu",e=>e.preventDefault());
+
+document.addEventListener("copy",e=>e.preventDefault());
 
 </script>
 
