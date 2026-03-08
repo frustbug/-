@@ -6,6 +6,7 @@
 <title>好感度</title>
 
 <style>
+
 :root{
 --primary-color:#ff7eac;
 --card-bg:rgba(255,255,255,0.9);
@@ -29,6 +30,7 @@ box-shadow:0 15px 35px rgba(255,105,135,0.2);
 text-align:center;
 width:350px;
 border:2px solid white;
+position:relative;
 }
 
 h1{
@@ -64,14 +66,6 @@ width:0%;
 transition:width 1s;
 }
 
-.warning{
-color:#ff4d6d;
-font-weight:bold;
-font-size:0.85rem;
-display:none;
-margin-top:10px;
-}
-
 .heart{
 font-size:40px;
 color:#ff4d6d;
@@ -81,6 +75,30 @@ animation:beat 1.5s infinite;
 @keyframes beat{
 0%,100%{transform:scale(1);}
 50%{transform:scale(1.1);}
+}
+
+.hammer{
+font-size:40px;
+cursor:pointer;
+margin-top:20px;
+}
+
+.bubble{
+position:absolute;
+bottom:100px;
+left:50%;
+transform:translateX(-50%);
+background:white;
+padding:10px 15px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+display:none;
+animation:rise 1.2s ease;
+}
+
+@keyframes rise{
+0%{opacity:0;transform:translate(-50%,20px);}
+100%{opacity:1;transform:translate(-50%,-10px);}
 }
 
 </style>
@@ -104,13 +122,11 @@ animation:beat 1.5s infinite;
 <div class="progress-bar" id="bar"></div>
 </div>
 
-<div id="warning" class="warning">
-⚠️ 警报：好感度已低于50%
+<div class="bubble" id="bubble">
+小诺诺小人想要加好感度！
 </div>
 
-<p style="font-size:0.6rem;color:#ccc;margin-top:20px;">
-© 好感度 · 实时更新
-</p>
+<div class="hammer" onclick="hammer()">🔨</div>
 
 </div>
 
@@ -122,20 +138,23 @@ const days = 180
 const decayPerMs =
 initial/(days*24*60*60*1000)
 
-let score =
-localStorage.getItem("love_score")
-? parseFloat(localStorage.getItem("love_score"))
-: initial
+let score=0
+let lastUpdate=0
 
-let lastUpdate =
-localStorage.getItem("last_update")
-? parseInt(localStorage.getItem("last_update"))
-: Date.now()
+async function loadData(){
+
+const res = await fetch("score.json?t="+Date.now())
+const data = await res.json()
+
+score = data.score
+lastUpdate = data.last_update
+
+update()
+}
 
 function update(){
 
 const now = Date.now()
-
 const elapsed = now-lastUpdate
 
 score -= elapsed*decayPerMs
@@ -148,37 +167,30 @@ document.getElementById("scoreDisplay")
 const percent=(score/initial)*100
 
 document.getElementById("bar")
-.style.width=Math.max(0,percent)+"%"
-
-const warning=document.getElementById("warning")
-const status=document.getElementById("status")
-
-if(percent<50){
-
-warning.style.display="block"
-
-status.innerText="危险"
-status.style.color="#ff4d6d"
-
-}else{
-
-warning.style.display="none"
-
-status.innerText="良好"
-status.style.color="#2ecc71"
-
-}
-
-localStorage.setItem("love_score",score)
-localStorage.setItem("last_update",now)
+.style.width=percent+"%"
 
 lastUpdate=now
+}
+
+function hammer(){
+
+const bubble=document.getElementById("bubble")
+
+bubble.style.display="block"
+
+setTimeout(()=>{
+bubble.style.display="none"
+},1500)
+
+fetch("request.json",{
+method:"POST"
+})
 
 }
 
-setInterval(update,1000)
+setInterval(loadData,2000)
 
-update()
+loadData()
 
 </script>
 
