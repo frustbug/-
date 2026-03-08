@@ -80,53 +80,82 @@ display:none;
 
 <script>
 
-let score=0
+const initial = 1000000
+
+let score = initial
 
 async function load(){
 
-const res = await fetch("score.json")
+const res = await fetch("score.json?t="+Date.now())
 const data = await res.json()
 
-score=data.score
+score = data.score
 
-document.getElementById("scoreDisplay")
-.innerText=Math.floor(score)
+updateDisplay()
 
 checkRequest()
 }
 
+function updateDisplay(){
+document.getElementById("scoreDisplay")
+.innerText = Math.floor(score).toLocaleString()
+}
+
+function limit(){
+if(score > initial) score = initial
+if(score < 0) score = 0
+}
+
 function save(){
 
-alert("需要上传新的 score.json 到 GitHub 才会同步")
+limit()
+
+alert("修改成功，请把新的 score.json 上传到 GitHub 才会同步")
+
+updateDisplay()
 
 }
 
 function setValue(){
-score=parseFloat(document.getElementById("value").value)
+
+let v = parseFloat(document.getElementById("value").value)
+
+if(!isNaN(v)){
+score = v
 save()
+}
+
 }
 
 function add100(){
-score+=100
+
+score += 100
 save()
+
 }
 
 function minus100(){
-score-=100
+
+score -= 100
 save()
+
 }
 
 function meet(){
-score+=10000
+
+// 见面直接回满
+score = initial
+
 save()
+
 }
 
 async function checkRequest(){
 
 try{
 
-const res=await fetch("request.json?t="+Date.now())
-const data=await res.json()
+const res = await fetch("request.json?t="+Date.now())
+const data = await res.json()
 
 if(data.request){
 document.getElementById("alert").style.display="block"
