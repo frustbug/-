@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>修改好感度</title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#ffd6e7,#d9f0ff);
+font-family:sans-serif;
+}
+
+.box{
+background:white;
+padding:40px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+input{
+padding:10px;
+font-size:16px;
+margin:10px;
+}
+
+button{
+padding:10px 20px;
+background:#ff4f9a;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>管理员修改</h2>
+
+<input id="value" placeholder="输入好感度">
+
+<br>
+
+<button onclick="generate()">生成新数据</button>
+
+<p id="output"></p>
+
+</div>
+
+<script>
+
+function generate(){
+
+let v=document.getElementById("value").value;
+
+let json = {
+
+favorability: Number(v),
+
+lastUpdate: Date.now()
+
+};
+
+document.getElementById("output").innerText = JSON.stringify(json,null,2);
+
+}
+
+</script>
+
+</body>
+</html>

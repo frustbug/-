@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>好感度</title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#ffd6e7,#d9f0ff);
+font-family:sans-serif;
+}
+
+.box{
+background:white;
+padding:50px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+text-align:center;
+position:relative;
+}
+
+.value{
+font-size:60px;
+color:#ff4f9a;
+margin-bottom:30px;
+}
+
+.hammer{
+font-size:60px;
+cursor:pointer;
+transition:0.15s;
+}
+
+.hammer:active{
+transform:scale(0.8) rotate(-20deg);
+}
+
+.pop{
+position:absolute;
+left:50%;
+bottom:120px;
+transform:translateX(-50%);
+background:#ff4f9a;
+color:white;
+padding:8px 15px;
+border-radius:20px;
+font-size:16px;
+animation:pop 2s forwards;
+}
+
+@keyframes pop{
+
+0%{
+opacity:0;
+transform:translate(-50%,20px);
+}
+
+20%{
+opacity:1;
+}
+
+100%{
+opacity:0;
+transform:translate(-50%,-60px);
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>当前好感度</h2>
+
+<div class="value" id="favor">加载中...</div>
+
+<div class="hammer" id="hammer">🔨</div>
+
+<div id="popArea"></div>
+
+</div>
+
+<script>
+
+async function loadData(){
+
+let res = await fetch("data.json");
+
+let data = await res.json();
+
+let favor = data.favorability;
+
+let last = data.lastUpdate;
+
+let now = Date.now();
+
+let days = Math.floor((now-last)/86400000);
+
+favor = favor - days;
+
+if(favor < 0) favor = 0;
+
+document.getElementById("favor").innerText = favor;
+
+}
+
+loadData();
+
+const hammer=document.getElementById("hammer");
+
+hammer.onclick=function(){
+
+const div=document.createElement("div");
+
+div.className="pop";
+
+div.innerText="小诺诺小人想要加好感度";
+
+document.getElementById("popArea").appendChild(div);
+
+setTimeout(()=>{
+
+div.remove();
+
+},2000);
+
+}
+
+</script>
+
+</body>
+</html>
