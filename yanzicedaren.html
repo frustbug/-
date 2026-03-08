@@ -1,0 +1,97 @@
+<script>
+
+const GIST_ID = "你的gistID"
+const TOKEN = "你的GitHubToken"
+const FILE = "data.json"
+
+const initial = 1000000
+
+async function getData(){
+
+const res = await fetch(
+"https://api.github.com/gists/"+GIST_ID
+)
+
+const data = await res.json()
+
+return JSON.parse(data.files[FILE].content)
+
+}
+
+async function saveScore(v){
+
+await fetch(
+"https://api.github.com/gists/"+GIST_ID,
+{
+method:"PATCH",
+headers:{
+"Authorization":"token "+TOKEN
+},
+body:JSON.stringify({
+files:{
+[FILE]:{
+content:JSON.stringify({
+score:v,
+last_update:Date.now()
+})
+}
+}
+})
+})
+
+updateDisplay()
+
+}
+
+async function updateDisplay(){
+
+const data = await getData()
+
+document.getElementById("scoreDisplay").innerText =
+Math.floor(data.score).toLocaleString()
+
+}
+
+async function setValue(){
+
+const val = parseFloat(
+document.getElementById("value").value
+)
+
+if(!isNaN(val)){
+saveScore(val)
+}
+
+}
+
+async function add100(){
+
+const data = await getData()
+
+saveScore(data.score+100)
+
+}
+
+async function minus100(){
+
+const data = await getData()
+
+let v = data.score-100
+
+if(v<0)v=0
+
+saveScore(v)
+
+}
+
+async function meet(){
+
+const data = await getData()
+
+saveScore(data.score+10000)
+
+}
+
+updateDisplay()
+
+</script>
