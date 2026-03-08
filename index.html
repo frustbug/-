@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>好感度</title>
 
 <style>
@@ -20,6 +22,12 @@ justify-content:center;
 align-items:center;
 height:100vh;
 margin:0;
+
+/* 禁止复制 */
+-webkit-user-select:none;
+-moz-user-select:none;
+-ms-user-select:none;
+user-select:none;
 }
 
 .container{
@@ -66,6 +74,14 @@ width:0%;
 transition:width 1s;
 }
 
+.warning{
+color:#ff4d6d;
+font-weight:bold;
+font-size:0.85rem;
+display:none;
+margin-top:10px;
+}
+
 .heart{
 font-size:40px;
 color:#ff4d6d;
@@ -77,31 +93,60 @@ animation:beat 1.5s infinite;
 50%{transform:scale(1.1);}
 }
 
+/* 锤子 */
+
 .hammer{
-font-size:40px;
+font-size:45px;
 cursor:pointer;
 margin-top:20px;
 }
 
-.bubble{
+/* 冒出的文字 */
+
+.hammer-text{
+
 position:absolute;
-bottom:100px;
 left:50%;
 transform:translateX(-50%);
+bottom:90px;
+
 background:white;
-padding:10px 15px;
+padding:8px 14px;
 border-radius:10px;
+
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
-display:none;
-animation:rise 1.2s ease;
+
+font-size:14px;
+color:#ff4d6d;
+
+opacity:0;
+pointer-events:none;
 }
 
-@keyframes rise{
-0%{opacity:0;transform:translate(-50%,20px);}
-100%{opacity:1;transform:translate(-50%,-10px);}
+.hammer-text.show{
+animation:floatUp 1.5s ease;
+}
+
+@keyframes floatUp{
+
+0%{
+opacity:0;
+transform:translate(-50%,20px);
+}
+
+20%{
+opacity:1;
+}
+
+100%{
+opacity:0;
+transform:translate(-50%,-40px);
+}
+
 }
 
 </style>
+
 </head>
 
 <body>
@@ -122,15 +167,48 @@ animation:rise 1.2s ease;
 <div class="progress-bar" id="bar"></div>
 </div>
 
-<div class="bubble" id="bubble">
+<div id="warning" class="warning">
+⚠️ 警报：好感度已低于50%
+</div>
+
+<!-- 锤子文字 -->
+<div id="hammerText" class="hammer-text">
 小诺诺小人想要加好感度！
 </div>
 
-<div class="hammer" onclick="hammer()">🔨</div>
+<!-- 锤子 -->
+<div class="hammer" onclick="hammerClick()">🔨</div>
+
+<p style="font-size:0.6rem;color:#ccc;margin-top:20px;">
+© 好感度 · 实时更新
+</p>
 
 </div>
 
 <script>
+
+/* 禁止右键 */
+
+document.addEventListener("contextmenu",function(e){
+e.preventDefault()
+})
+
+/* 禁止复制 */
+
+document.addEventListener("keydown",function(e){
+
+if(e.ctrlKey && (
+e.key==="c" ||
+e.key==="x" ||
+e.key==="u" ||
+e.key==="s"
+)){
+e.preventDefault()
+}
+
+})
+
+/* 好感度逻辑 */
 
 const initial = 1000000
 const days = 180
@@ -138,27 +216,27 @@ const days = 180
 const decayPerMs =
 initial/(days*24*60*60*1000)
 
-let score=0
-let lastUpdate=0
+let score =
+localStorage.getItem("love_score")
+? parseFloat(localStorage.getItem("love_score"))
+: initial
 
-async function loadData(){
-
-const res = await fetch("score.json?t="+Date.now())
-const data = await res.json()
-
-score = data.score
-lastUpdate = data.last_update
-
-update()
-}
+let lastUpdate =
+localStorage.getItem("last_update")
+? parseInt(localStorage.getItem("last_update"))
+: Date.now()
 
 function update(){
 
 const now = Date.now()
+
 const elapsed = now-lastUpdate
 
 score -= elapsed*decayPerMs
 
+/* 限制范围 */
+
+if(score>initial)score=initial
 if(score<0)score=0
 
 document.getElementById("scoreDisplay")
@@ -167,30 +245,51 @@ document.getElementById("scoreDisplay")
 const percent=(score/initial)*100
 
 document.getElementById("bar")
-.style.width=percent+"%"
+.style.width=Math.max(0,percent)+"%"
+
+const warning=document.getElementById("warning")
+const status=document.getElementById("status")
+
+if(percent<50){
+
+warning.style.display="block"
+
+status.innerText="危险"
+status.style.color="#ff4d6d"
+
+}else{
+
+warning.style.display="none"
+
+status.innerText="良好"
+status.style.color="#2ecc71"
+
+}
+
+localStorage.setItem("love_score",score)
+localStorage.setItem("last_update",now)
 
 lastUpdate=now
-}
-
-function hammer(){
-
-const bubble=document.getElementById("bubble")
-
-bubble.style.display="block"
-
-setTimeout(()=>{
-bubble.style.display="none"
-},1500)
-
-fetch("request.json",{
-method:"POST"
-})
 
 }
 
-setInterval(loadData,2000)
+/* 锤子点击动画 */
 
-loadData()
+function hammerClick(){
+
+const text=document.getElementById("hammerText")
+
+text.classList.remove("show")
+
+void text.offsetWidth
+
+text.classList.add("show")
+
+}
+
+setInterval(update,1000)
+
+update()
 
 </script>
 
