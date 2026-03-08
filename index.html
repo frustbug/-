@@ -1,13 +1,106 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>My Website</title>
-</head>
+<script>
 
-<body>
+// ====== 配置 ======
+const GIST_ID = "你的gistID"
+const TOKEN = "你的GitHubToken"
+const FILE = "data.json"
 
-<h1>Hello GitHub Pages 🚀</h1>
-<p>我的网站成功了</p>
+// 原有参数保持不变
+const initial = 1000000
+const days = 180
+const decayPerMs = initial / (days*24*60*60*1000)
 
-</body>
-</html>
+let score = initial
+let lastUpdate = Date.now()
+
+// ====== 读取服务器数据 ======
+async function loadData(){
+
+const res = await fetch(
+"https://api.github.com/gists/" + GIST_ID
+)
+
+const data = await res.json()
+
+const file = JSON.parse(data.files[FILE].content)
+
+score = file.score
+lastUpdate = file.last_update
+
+update()
+
+}
+
+// ====== 保存服务器数据 ======
+async function saveData(){
+
+await fetch(
+"https://api.github.com/gists/" + GIST_ID,
+{
+method:"PATCH",
+headers:{
+"Authorization":"token " + TOKEN
+},
+body:JSON.stringify({
+files:{
+[FILE]:{
+content:JSON.stringify({
+score:score,
+last_update:lastUpdate
+})
+}
+}
+})
+})
+
+}
+
+// ====== 更新 ======
+function update(){
+
+const now = Date.now()
+
+const elapsed = now-lastUpdate
+
+score -= elapsed*decayPerMs
+
+if(score<0)score=0
+
+document.getElementById("scoreDisplay").innerText =
+Math.floor(score).toLocaleString()
+
+const percent = (score/initial)*100
+
+document.getElementById("bar").style.width =
+Math.max(0,percent)+"%"
+
+const warningEl = document.getElementById("warning")
+const statusEl = document.getElementById("status")
+
+if(percent<50){
+
+warningEl.style.display="block"
+statusEl.innerText="危险"
+statusEl.style.color="#ff4d6d"
+
+}else{
+
+warningEl.style.display="none"
+statusEl.innerText="良好"
+statusEl.style.color="#2ecc71"
+
+}
+
+lastUpdate = now
+
+saveData()
+
+}
+
+// 每秒更新
+setInterval(update,1000)
+
+// 启动
+loadData()
+
+</script>
